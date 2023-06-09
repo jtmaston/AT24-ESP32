@@ -54,3 +54,4 @@ Temporary Items
 #ESP32
 build
 *.old
+.idea
