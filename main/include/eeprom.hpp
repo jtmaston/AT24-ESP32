@@ -10,7 +10,7 @@
 #include "driver/i2c.h"
 #include "esp_log.h"
 
-const char TAG[] = "EEPROM";
+static const char* EEPROM_TAG = "EEPROM";
 
 // #define M_PERFORMANCE_METRICS      // uncomment to enable performance metrics of write functions
 
@@ -20,7 +20,7 @@ const char TAG[] = "EEPROM";
 
 class EEPROM{
 public:
-    EEPROM(uint16_t addr, uint16_t baseAddress, uint16_t topAddress, uint16_t pageSize, bool initBus = false,
+    EEPROM(uint16_t addr, uint32_t baseAddress, uint32_t topAddress, uint16_t pageSize, bool initBus = false,
            uint8_t scl = 22, uint8_t sda = 21, uint8_t num = 0, uint32_t freq = 4e5, bool pullUp = true );           // constructor, will initialize the bus
                                                                             // if it has not been init
     ~EEPROM();                                                              // destructor, will free any memory used
@@ -37,8 +37,8 @@ public:
 
 private:
     uint16_t address;                                   // address of the eeprom on the bus
-    uint16_t baseAddress = 0x0;                         // the base address of the eeprom, should be 0
-    uint16_t topAddress;                                // the top address, represents eeprom size
+    uint32_t baseAddress = 0x0;                         // the base address of the eeprom, should be 0
+    uint32_t topAddress;                                // the top address, represents eeprom size
     uint16_t pageSize;                                   // the pagesize, for page reads
     uint8_t* readBuffer;                                // internal buffer used in reading
     uint16_t bufferSize;                                // the size of the buffer at the last allocation

@@ -1,7 +1,7 @@
 #include "eeprom.hpp"
 
 
-EEPROM::EEPROM(uint16_t addr, uint16_t baseAddress, uint16_t topAddress, uint16_t pageSize, bool initBus,
+EEPROM::EEPROM(uint16_t addr, uint32_t baseAddress, uint32_t topAddress, uint16_t pageSize, bool initBus,
                uint8_t scl, uint8_t sda, uint8_t num, uint32_t freq, bool pullUp) {
                 // Default constructor, initializes the parameters of the eeprom and (optionally) the bus
 
@@ -130,16 +130,16 @@ uint8_t *EEPROM::read(uint16_t addr, uint16_t size) {                           
     uint64_t start = esp_timer_get_time();
 #endif
     if (!this->bufferSize) {                                                    // an internal buffer is used to store data
-        ESP_LOGD(TAG, "Creating buffer");
+        ESP_LOGD(EEPROM_TAG, "Creating buffer");
         this->readBuffer = (uint8_t *) calloc((size + 10), sizeof(uint8_t));
         this->bufferSize = size + 10;
     } else {
         if (size > bufferSize) {                                                // if it overflows, extend the buffer
-            ESP_LOGD(TAG, "Increasing buffer size");
+            ESP_LOGD(EEPROM_TAG, "Increasing buffer size");
             this->readBuffer = (uint8_t *) realloc(this->readBuffer, (size + 10) * sizeof(uint8_t));
             this->bufferSize = size + 10;
         } else if (size + 100 < bufferSize) {                                   // if the buffer is 100B larger than the
-            ESP_LOGD(TAG, "Decreasing buffer size");                            // size being read, decrease size
+            ESP_LOGD(EEPROM_TAG, "Decreasing buffer size");                            // size being read, decrease size
             this->readBuffer = (uint8_t *) realloc(this->readBuffer, (size + 10) * sizeof(uint8_t));
             this->bufferSize = size + 10;
         }
@@ -195,16 +195,16 @@ void EEPROM::format(uint8_t filler) {
 void EEPROM::parseError(esp_err_t errCode) {            // a cheap error parser
     switch (errCode) {
         case ESP_OK:
-            ESP_LOGD(TAG, "Operation successful");
+            ESP_LOGD(EEPROM_TAG, "Operation successful");
             break;
         case ESP_ERR_INVALID_ARG:
-            ESP_LOGE(TAG, "Invalid argument!");
+            ESP_LOGE(EEPROM_TAG, "Invalid argument!");
             break;
         case ESP_ERR_INVALID_STATE:
-            ESP_LOGE(TAG, "Invalid state!");
+            ESP_LOGE(EEPROM_TAG, "Invalid state!");
             break;
         case ESP_ERR_TIMEOUT:
-            ESP_LOGE(TAG, "Timeout!");
+            ESP_LOGE(EEPROM_TAG, "Timeout!");
             break;
         default:
             break;
