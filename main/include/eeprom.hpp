@@ -18,6 +18,13 @@ static const char* EEPROM_TAG = "EEPROM";
 #include "esp_timer.h"
 #endif
 
+#ifdef M_USE_MUTEX
+
+#include <mutex>
+extern std::mutex M_MUTEX_PROTECTOR;
+
+#endif
+
 class EEPROM{
 public:
     EEPROM(uint16_t addr, uint32_t baseAddress, uint32_t topAddress, uint16_t pageSize, bool initBus = false,

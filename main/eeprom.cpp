@@ -3,7 +3,7 @@
 
 EEPROM::EEPROM(uint16_t addr, uint32_t baseAddress, uint32_t topAddress, uint16_t pageSize, bool initBus,
                uint8_t scl, uint8_t sda, uint8_t num, uint32_t freq, bool pullUp) {
-                // Default constructor, initializes the parameters of the eeprom and (optionally) the bus
+    // Default constructor, initializes the parameters of the eeprom and (optionally) the bus
 
     if (initBus) {
         i2c_config_t conf = {
@@ -34,6 +34,9 @@ EEPROM::~EEPROM() {                                     // a destructor meant to
 
 
 void EEPROM::write(uint16_t addr, uint8_t byte) {                           // writes a single byte
+#ifdef M_USE_MUTEX
+    M_MUTEX_PROTECTOR.lock();
+#endif
 #ifdef M_PERFORMANCE_METRICS
     uint64_t start = esp_timer_get_time();
 #endif
@@ -57,11 +60,18 @@ void EEPROM::write(uint16_t addr, uint8_t byte) {                           // w
     printf("%s\n", output);
     fflush(stdout);
 #endif
+#ifdef M_USE_MUTEX
+    M_MUTEX_PROTECTOR.unlock();
+#endif
 }
 
 
 void EEPROM::write(uint16_t baseAddr, uint8_t *byteArray, uint16_t size) {  // writes a string, page by page
-#ifdef M_PERFORMANCE_METRICS                                                // stream as described by datasheet, page 17
+#ifdef M_USE_MUTEX                                                          // stream as described by datasheet, page 17
+    M_MUTEX_PROTECTOR.lock();
+#endif
+
+#ifdef M_PERFORMANCE_METRICS
     uint64_t start = esp_timer_get_time();
 #endif
 
@@ -92,10 +102,16 @@ void EEPROM::write(uint16_t baseAddr, uint8_t *byteArray, uint16_t size) {  // w
     printf("%s\n", output);
     fflush(stdout);
 #endif
+#ifdef M_USE_MUTEX
+    M_MUTEX_PROTECTOR.unlock();
+#endif
 
 }
 
 uint8_t EEPROM::read(uint16_t addr) {                                           // reads a single byte
+#ifdef M_USE_MUTEX                                                          // stream as described by datasheet, page 17
+    M_MUTEX_PROTECTOR.lock();
+#endif
 #ifdef M_PERFORMANCE_METRICS
     uint64_t start = esp_timer_get_time();
 #endif
@@ -122,12 +138,19 @@ uint8_t EEPROM::read(uint16_t addr) {                                           
     printf("%s\n", output);
     fflush(stdout);
 #endif
+#ifdef M_USE_MUTEX
+    M_MUTEX_PROTECTOR.unlock();
+#endif
     return data;
 }
 
 uint8_t *EEPROM::read(uint16_t addr, uint16_t size) {                           // reads a chunk of the eeprom, from
 #ifdef M_PERFORMANCE_METRICS                                                    // base address to the specified size
     uint64_t start = esp_timer_get_time();
+#endif
+
+#ifdef M_USE_MUTEX                                                          // stream as described by datasheet, page 17
+    M_MUTEX_PROTECTOR.lock();
 #endif
     if (!this->bufferSize) {                                                    // an internal buffer is used to store data
         ESP_LOGD(EEPROM_TAG, "Creating buffer");
@@ -172,7 +195,9 @@ uint8_t *EEPROM::read(uint16_t addr, uint16_t size) {                           
     printf("%s\n", output);
     fflush(stdout);
 #endif
-
+#ifdef M_USE_MUTEX
+    M_MUTEX_PROTECTOR.unlock();
+#endif
     return this->readBuffer;
 }
 
@@ -180,7 +205,7 @@ uint8_t *EEPROM::dump() {                                                   // d
     this->read(this->baseAddress, (this->topAddress - this->baseAddress));  // base address to top address
     return this->readBuffer;                            // ! ! ! THIS SHOULD NOT BE USED IN PRODUCTION ! ! !
 }                                                       // any sensible eeprom greater than 125KB will most likely
-                                                        // overflow the heap. Possibly. Maybe. Fixme
+// overflow the heap. Possibly. Maybe. Fixme
 void EEPROM::format(uint8_t filler) {
 
     uint16_t size = this->topAddress - this->baseAddress;       // formats the eeprom, filling it with the value
